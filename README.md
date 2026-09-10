@@ -1,426 +1,124 @@
-# NLP-Emotion-Classification
-A Natural Language Processing application that classifies text into emotions using TF-IDF and Logistic Regression, with an interactive Streamlit interface for real-time predictions and model performance analysis
-# 💭 NLP Emotion Classification with Streamlit
+# 💭 Sentiment & Emotion Analyzer — Streamlit
 
-An end-to-end **Natural Language Processing (NLP)** project that classifies text into different emotions using **TF-IDF Vectorization** and **Logistic Regression**.
+A complete Streamlit NLP application based on the uploaded `NLP_Project.ipynb`.
 
-The project includes an interactive **Streamlit web application** where users can enter text and receive a predicted emotion along with the model's confidence and performance information.
+## What the notebook uses
 
----
+The original notebook:
+- reads `train.txt` using `sep=";"` with columns `text` and `emotions`
+- converts text to lowercase
+- removes punctuation
+- removes numbers
+- removes non-ASCII characters
+- removes English stopwords
+- uses an 80/20 train-test split with `random_state=42`
+- compares Bag-of-Words/Naive Bayes and TF-IDF/Naive Bayes
+- finishes with TF-IDF + `LogisticRegression(max_iter=1000)`
 
-## 🚀 Project Overview
+The notebook's final Logistic Regression result is approximately **86.28% accuracy** on its test split. The Streamlit app retrains that final model from the dataset when it starts, so the displayed score is calculated from the dataset currently loaded.
 
-This project demonstrates a complete NLP machine learning workflow:
-
-**Text Dataset → Text Preprocessing → TF-IDF → Logistic Regression → Emotion Prediction → Streamlit Application**
-
-The model learns patterns from text data and predicts the emotion associated with a given sentence.
-
-> **Note:** Although the application is sometimes referred to as a sentiment analyzer, the target column in this project is `emotions`, so the task is technically **multi-class emotion classification**.
-
----
-
-## ✨ Features
-
-* 📝 Text preprocessing
-* 🔤 Lowercase conversion
-* ✂️ Punctuation removal
-* 🔢 Number removal
-* 🚫 Non-ASCII character removal
-* 🛑 English stopword removal
-* 📊 TF-IDF feature extraction
-* 🤖 Logistic Regression classification
-* 🎯 Emotion prediction
-* 📈 Prediction confidence
-* 📊 Emotion probability visualization
-* 📉 Confusion matrix
-* 📋 Classification report
-* 📊 Dataset statistics
-* 🌐 Interactive Streamlit interface
-
----
-
-## 🛠️ Technologies Used
-
-* **Python**
-* **Pandas**
-* **NumPy**
-* **NLTK**
-* **Scikit-learn**
-* **Matplotlib**
-* **Streamlit**
-
-### Machine Learning
-
-* TF-IDF Vectorizer
-* Logistic Regression
-* Train-Test Split
-* Accuracy Score
-* Confusion Matrix
-* Classification Report
-
----
-
-## 📂 Project Structure
+## Project structure
 
 ```text
-NLP-Emotion-Classification-Streamlit/
+sentiment_streamlit_app/
 │
 ├── app.py
-├── train.txt
 ├── requirements.txt
 ├── README.md
-└── .gitignore
+└── train.txt          # put your dataset here
 ```
 
----
+## Dataset format
 
-## 🧠 Machine Learning Workflow
-
-### 1. Load Dataset
-
-The project uses a text dataset containing two columns:
+Your `train.txt` should look like:
 
 ```text
-text
-emotions
+i didnt feel humiliated;sadness
+i feel happy today;joy
+i am very angry;anger
 ```
 
-Example:
+The application expects exactly two logical columns:
 
 ```text
-I am feeling really happy today;joy
-I am extremely angry;anger
-I feel lonely and sad;sadness
+text;emotions
 ```
 
----
+No header is required because the app assigns the column names automatically.
 
-### 2. Text Preprocessing
+## Run in VS Code
 
-The raw text is cleaned before training.
+### 1. Create a virtual environment
 
-The preprocessing pipeline includes:
-
-```text
-Original Text
-      ↓
-Lowercase
-      ↓
-Remove Punctuation
-      ↓
-Remove Numbers
-      ↓
-Remove Non-ASCII Characters
-      ↓
-Remove Stopwords
-      ↓
-Clean Text
-```
-
----
-
-### 3. TF-IDF Vectorization
-
-The cleaned text is converted into numerical features using:
-
-```python
-TfidfVectorizer()
-```
-
-TF-IDF helps the machine learning model identify words that are important for distinguishing between different emotions.
-
----
-
-### 4. Train-Test Split
-
-The dataset is divided into:
-
-```text
-80% → Training Data
-20% → Testing Data
-```
-
-The project uses:
-
-```python
-random_state=42
-```
-
----
-
-### 5. Logistic Regression
-
-The final classification model is:
-
-```python
-LogisticRegression(max_iter=1000)
-```
-
-The model learns the relationship between text features and emotion labels.
-
----
-
-## 📊 Model Performance
-
-The Logistic Regression model achieved approximately:
-
-**86.28% test accuracy**
-
-Performance may vary slightly depending on the dataset and preprocessing environment.
-
----
-
-## 🌐 Streamlit Application
-
-The project includes an interactive Streamlit application with three main sections.
-
-### 🔮 Predict
-
-Users can enter a sentence and receive:
-
-* Predicted emotion
-* Prediction confidence
-* Cleaned text
-* Emotion probabilities
-
-Example:
-
-```text
-Input:
-I am feeling really happy today!
-
-Output:
-Predicted emotion: joy
-Confidence: XX.XX%
-```
-
----
-
-### 📊 Dashboard
-
-The dashboard displays:
-
-* Dataset size
-* Number of emotion classes
-* Vocabulary size
-* Test accuracy
-* Emotion distribution
-* Confusion matrix
-* Dataset preview
-
----
-
-### 🧠 Model Details
-
-This section provides information about:
-
-* NLP preprocessing
-* TF-IDF
-* Logistic Regression
-* Train-test split
-* Classification report
-* Emotion labels
-
----
-
-## ⚙️ Installation
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/YOUR-USERNAME/NLP-Emotion-Classification-Streamlit.git
-```
-
-Move into the project directory:
-
-```bash
-cd NLP-Emotion-Classification-Streamlit
-```
-
----
-
-### 2. Create a virtual environment
-
-```bash
+```powershell
 python -m venv .venv
 ```
 
-Activate it on Windows:
+### 2. Activate it
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
----
+If PowerShell blocks activation, you can run:
 
-### 3. Install dependencies
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
 
-```bash
+### 3. Install packages
+
+```powershell
 python -m pip install -r requirements.txt
 ```
 
----
+### 4. Put `train.txt` beside `app.py`
 
-### 4. Run the Streamlit application
+```text
+sentiment_streamlit_app/
+├── app.py
+├── requirements.txt
+└── train.txt
+```
 
-```bash
+### 5. Start Streamlit
+
+```powershell
 python -m streamlit run app.py
 ```
 
-The application will open in your browser.
+This `python -m streamlit` command is useful when Windows says:
 
-Usually:
+`streamlit is not recognized as the name of a cmdlet...`
 
-```text
-http://localhost:8501
-```
+## Features
 
----
+### 🔮 Predict
+Enter a sentence and get:
+- predicted emotion
+- confidence
+- cleaned text
+- probability chart for all classes
 
-## 📦 Requirements
+### 📊 Dashboard
+Shows:
+- number of dataset rows
+- number of emotion classes
+- TF-IDF vocabulary size
+- test accuracy
+- emotion distribution
+- confusion matrix
+- dataset preview
 
-The main dependencies are:
+### 🧠 Model Details
+Shows:
+- preprocessing pipeline
+- model configuration
+- classification report
+- emotion labels
 
-```text
-streamlit
-pandas
-numpy
-scikit-learn
-nltk
-matplotlib
-```
+## Important terminology
 
-They are included in:
+Your dataset contains an `emotions` column, so technically this project is **emotion classification** rather than binary positive/negative sentiment analysis. A good GitHub project title is:
 
-```text
-requirements.txt
-```
-
----
-
-## 📄 Dataset Format
-
-The application expects the dataset in semicolon-separated format:
-
-```text
-text;emotion
-```
-
-For example:
-
-```text
-I am very happy today;joy
-I am feeling terrible;sadness
-I am angry about this;anger
-```
-
-Place the dataset in the project directory as:
-
-```text
-train.txt
-```
-
-You can also upload the dataset through the Streamlit sidebar.
-
----
-
-## 🎯 Example Predictions
-
-### Happy
-
-```text
-I am extremely happy with my results today.
-```
-
-### Sad
-
-```text
-I feel lonely and sad today.
-```
-
-### Angry
-
-```text
-I am very angry about what happened.
-```
-
-### Excited
-
-```text
-I am so excited about my new project!
-```
-
-### Fear
-
-```text
-I am scared about what might happen.
-```
-
-The exact predicted class depends on the emotion categories available in the training dataset.
-
----
-
-## 🔬 Skills Demonstrated
-
-This project demonstrates practical knowledge of:
-
-* Natural Language Processing
-* Text preprocessing
-* Stopword removal
-* Feature engineering
-* TF-IDF
-* Supervised Machine Learning
-* Logistic Regression
-* Model evaluation
-* Classification metrics
-* Data visualization
-* Streamlit
-* Python
-* Git & GitHub
-
----
-
-## 📌 Future Improvements
-
-Possible improvements include:
-
-* Add stemming and lemmatization
-* Experiment with Naive Bayes and SVM
-* Add Word2Vec embeddings
-* Add deep learning models
-* Add LSTM/GRU-based emotion classification
-* Experiment with Transformer models
-* Improve prediction accuracy
-* Deploy the application online
-* Add multilingual emotion detection
-
----
-
-## 👨‍💻 Author
-
-**Abhishek Sontakke**
-
-MCA Student | AI/ML | Data Science | NLP
-
----
-
-## ⭐ Project Highlights
-
-```text
-NLP
-  ↓
-Text Preprocessing
-  ↓
-TF-IDF
-  ↓
-Logistic Regression
-  ↓
-Emotion Classification
-  ↓
-Streamlit
-  ↓
-Interactive Prediction Dashboard
-```
-
-If you found this project useful, consider giving the repository a ⭐.
+**NLP Sentiment & Emotion Analyzer using TF-IDF and Logistic Regression**
