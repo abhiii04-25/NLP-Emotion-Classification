@@ -13,7 +13,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 st.set_page_config(
-    page_title="Sentiment & Emotion Analyzer",
+    page_title="Text Emotion Classifier",
     page_icon="💭",
     layout="wide",
 )
@@ -110,9 +110,9 @@ def train_model(df_for_training):
 st.markdown(
     """
     <div style="text-align:center">
-        <h1>💭 Sentiment & Emotion Analyzer</h1>
+        <h1>🧠 Text Emotion Classifier</h1>
         <p style="font-size:18px;">
-            NLP application using TF-IDF + Logistic Regression
+            Predict emotions in text using TF-IDF + Logistic Regression
         </p>
     </div>
     """,
@@ -181,7 +181,7 @@ with tab1:
         placeholder="Type a sentence here...",
     )
 
-    if st.button("🔍 Analyze Sentiment", type="primary", use_container_width=True):
+    if st.button("🔍 Analyze Emotion", type="primary", use_container_width=True):
         if not text.strip():
             st.warning("Please enter some text.")
         else:
@@ -280,4 +280,4 @@ with tab3:
     st.write(", ".join(labels))
 
 st.divider()
-st.caption(f"Dataset: {source_name} • NLP Project • Streamlit")
+st.caption(f"Dataset: {source_name} • Text Emotion Classification • Streamlit")
