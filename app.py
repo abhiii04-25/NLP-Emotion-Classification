@@ -230,126 +230,243 @@ except Exception as e:
     st.error(f"Could not load/train the model: {e}")
     st.stop()
 
-# ---------- Dashboard ----------
-tab1, tab2, tab3 = st.tabs(["🔮 Predict", "📊 Dashboard", "🧠 Model Details"])
+# ---------- Workspace tabs ----------
+tab1, tab2, tab3 = st.tabs(["✦  Predict", "▥  Dashboard", "⌘  Model details"])
 
 with tab1:
-    st.subheader("Analyze a sentence")
+    st.markdown('<div class="section-eyebrow">01 / Live analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-description">Enter a sentence to see what emotion the model detects and how confident it is.</div>', unsafe_allow_html=True)
 
-    examples = [
-        "I am feeling really happy today!",
-        "I feel terrible and hopeless.",
-        "I am angry about what happened.",
-        "I am excited about my new project.",
-    ]
+    input_col, result_col = st.columns([1.06, 0.94], gap="large")
 
-    selected = st.selectbox("Try an example", ["Custom text"] + examples)
-    default_text = "" if selected == "Custom text" else selected
+    with input_col:
+        with st.container(border=True):
+            st.markdown("### ✍️ Your text")
+            examples = [
+                "I am feeling really happy today!",
+                "I feel terrible and hopeless.",
+                "I am angry about what happened.",
+                "I am excited about my new project.",
+            ]
+            selected = st.selectbox("Start with an example", ["Custom text"] + examples)
+            default_text = "" if selected == "Custom text" else selected
+            user_text = st.text_area(
+                "Sentence to analyze",
+                value=default_text,
+                height=175,
+                placeholder="Type something like: I am proud of what I achieved today...",
+            )
+            st.caption("The model removes punctuation, numbers, non-ASCII characters and stopwords before prediction.")
+            analyze_clicked = st.button("✦  Analyze emotion", type="primary", use_container_width=True)
 
-    text = st.text_area(
-        "Enter your text",
-        value=default_text,
-        height=150,
-        placeholder="Type a sentence here...",
-    )
+        if analyze_clicked:
+            if not user_text.strip():
+                st.session_state.pop("emotion_prediction_result", None)
+                st.warning("Enter a sentence first, or choose one of the examples.")
+            else:
+                cleaned = clean_text(user_text)
+                if not cleaned.strip():
+                    st.session_state.pop("emotion_prediction_result", None)
+                    st.warning("After text cleaning, no words were left to analyze. Try a longer sentence.")
+                else:
+                    features = vectorizer.transform([cleaned])
+                    probabilities = model.predict_proba(features)[0]
+                    best_index = int(probabilities.argmax())
+                    prediction = str(model.classes_[best_index])
+                    st.session_state["emotion_prediction_result"] = {
+                        "source_name": source_name,
+                        "text": user_text,
+                        "cleaned": cleaned,
+                        "prediction": prediction,
+                        "confidence": float(probabilities[best_index]),
+                        "word_count": len(cleaned.split()),
+                        "probabilities": {
+                            str(label): float(probability)
+                            for label, probability in zip(model.classes_, probabilities)
+                        },
+                    }
 
-    if st.button("🔍 Analyze Emotion", type="primary", use_container_width=True):
-        if not text.strip():
-            st.warning("Please enter some text.")
-        else:
-            cleaned = clean_text(text)
-            features = vectorizer.transform([cleaned])
-            prediction = model.predict(features)[0]
+    saved_result = st.session_state.get("emotion_prediction_result")
+    if saved_result and saved_result.get("source_name") != source_name:
+        saved_result = None
 
-            result = prediction
-            probabilities = model.predict_proba(features)[0]
-            best_index = probabilities.argmax()
-            confidence = probabilities[best_index]
+    with result_col:
+        with st.container(border=True):
+            if saved_result:
+                st.markdown('<div class="result-label">✦ Model result</div>', unsafe_allow_html=True)
+                st.markdown("### Detected emotion")
+                st.success(f"**{saved_result['prediction'].title()}**")
+                stat1, stat2 = st.columns(2)
+                stat1.metric("Model confidence", f"{saved_result['confidence'] * 100:.1f}%")
+                stat2.metric("Words analyzed", saved_result["word_count"])
+                st.markdown("**Cleaned text**")
+                st.code(saved_result["cleaned"], language="text")
+                st.caption("Confidence is the model's highest class probability, not a guarantee of correctness.")
+            else:
+                st.markdown(
+                    """
+                    <div class="empty-state">
+                      <div class="empty-icon">🪄</div>
+                      <h3>Your insight starts here</h3>
+                      <p>Submit a sentence to reveal the predicted emotion, confidence score, cleaned text and class-by-class probability breakdown.</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
-            st.success(f"Predicted emotion: **{result}**")
+    if saved_result:
+        st.markdown("### Emotion probability breakdown")
+        st.markdown('<div class="section-description">Compare the model score for each emotion. The highlighted bar is the top prediction.</div>', unsafe_allow_html=True)
+        prob_df = pd.DataFrame(
+            {
+                "Emotion": list(saved_result["probabilities"].keys()),
+                "Probability": [value * 100 for value in saved_result["probabilities"].values()],
+            }
+        ).sort_values("Probability", ascending=True)
 
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Prediction", str(result))
-            c2.metric("Confidence", f"{confidence * 100:.2f}%")
-            c3.metric("Cleaned words", len(cleaned.split()))
-
-            st.write("**Cleaned text:**")
-            st.code(cleaned if cleaned else "(empty after preprocessing)")
-
-            st.write("**Emotion probabilities**")
-            prob_df = pd.DataFrame(
-                {"Emotion": model.classes_, "Probability": probabilities}
-            ).sort_values("Probability", ascending=False)
-            prob_df["Probability"] = prob_df["Probability"] * 100
-            st.bar_chart(prob_df.set_index("Emotion")["Probability"])
+        fig, ax = plt.subplots(figsize=(10, max(3.1, len(prob_df) * 0.48)), facecolor="#0e1728")
+        ax.set_facecolor("#0e1728")
+        chart_colors = [
+            "#6ee7d8" if emotion == saved_result["prediction"] else "#7188b9"
+            for emotion in prob_df["Emotion"]
+        ]
+        bars = ax.barh(prob_df["Emotion"], prob_df["Probability"], color=chart_colors, height=0.58)
+        max_value = max(float(prob_df["Probability"].max()), 1.0)
+        ax.set_xlim(0, min(125, max_value * 1.25 + 4))
+        ax.set_xlabel("Model probability (%)", color="#9ba9c3", labelpad=10)
+        ax.tick_params(axis="x", colors="#91a1bf", labelsize=9)
+        ax.tick_params(axis="y", colors="#e1e9fb", labelsize=10, length=0)
+        ax.grid(axis="x", color="#283650", alpha=0.75, linewidth=0.8)
+        ax.set_axisbelow(True)
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        for bar, value in zip(bars, prob_df["Probability"]):
+            ax.text(
+                min(value + 1.2, 119),
+                bar.get_y() + bar.get_height() / 2,
+                f"{value:.1f}%",
+                va="center",
+                ha="left",
+                color="#f0f4ff",
+                fontsize=9,
+                fontweight="bold",
+            )
+        fig.tight_layout()
+        st.pyplot(fig, use_container_width=True)
+        plt.close(fig)
 
 with tab2:
-    st.subheader("Dataset & model performance")
+    st.markdown('<div class="section-eyebrow">02 / Model observability</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-description">A snapshot of the data and how the classifier performs on its held-out test split.</div>', unsafe_allow_html=True)
 
-    a, b, c, d = st.columns(4)
-    a.metric("Dataset rows", f"{len(data):,}")
+    a, b, c, d = st.columns(4, gap="medium")
+    a.metric("Dataset examples", f"{len(data):,}")
     b.metric("Emotion classes", len(labels))
-    c.metric("Vocabulary size", f"{len(vectorizer.vocabulary_):,}")
+    c.metric("TF-IDF vocabulary", f"{len(vectorizer.vocabulary_):,}")
     d.metric("Test accuracy", f"{accuracy * 100:.2f}%")
 
     st.divider()
+    distribution_col, matrix_col = st.columns([0.95, 1.05], gap="large")
 
-    col1, col2 = st.columns(2)
+    with distribution_col:
+        with st.container(border=True):
+            st.markdown("### Emotion distribution")
+            counts = data["emotions"].value_counts().sort_values(ascending=True)
+            fig, ax = plt.subplots(figsize=(7.5, max(3.4, len(counts) * 0.44)), facecolor="#0e1728")
+            ax.set_facecolor("#0e1728")
+            bars = ax.barh(counts.index.astype(str), counts.values, color="#7cc8ff", height=0.62)
+            ax.set_xlabel("Number of examples", color="#9ba9c3", labelpad=9)
+            ax.tick_params(axis="x", colors="#91a1bf", labelsize=9)
+            ax.tick_params(axis="y", colors="#e1e9fb", labelsize=9, length=0)
+            ax.grid(axis="x", color="#283650", alpha=0.75, linewidth=0.8)
+            ax.set_axisbelow(True)
+            for spine in ax.spines.values():
+                spine.set_visible(False)
+            for bar in bars:
+                width = bar.get_width()
+                ax.text(width + max(counts.max() * 0.012, 0.2), bar.get_y() + bar.get_height()/2,
+                        f"{width:,.0f}", va="center", color="#e8efff", fontsize=9)
+            ax.set_xlim(0, counts.max() * 1.17)
+            fig.tight_layout()
+            st.pyplot(fig, use_container_width=True)
+            plt.close(fig)
 
-    with col1:
-        st.markdown("### Emotion distribution")
-        counts = data["emotions"].value_counts()
-        st.bar_chart(counts)
+    with matrix_col:
+        with st.container(border=True):
+            st.markdown("### Confusion matrix")
+            fig, ax = plt.subplots(figsize=(7.5, 5.2), facecolor="#0e1728")
+            ax.set_facecolor("#0e1728")
+            image = ax.imshow(cm, cmap="viridis", aspect="auto")
+            ax.set_xticks(range(len(labels)))
+            ax.set_yticks(range(len(labels)))
+            ax.set_xticklabels(labels, rotation=35, ha="right", color="#c9d5ed")
+            ax.set_yticklabels(labels, color="#c9d5ed")
+            ax.set_xlabel("Predicted label", color="#9ba9c3", labelpad=10)
+            ax.set_ylabel("Actual label", color="#9ba9c3", labelpad=10)
+            ax.tick_params(axis="both", length=0)
+            threshold = float(cm.max()) / 2 if cm.size else 0
+            for i in range(len(labels)):
+                for j in range(len(labels)):
+                    ax.text(j, i, f"{cm[i, j]:,}", ha="center", va="center",
+                            color="#f7f9ff" if cm[i, j] > threshold else "#dbe7ff",
+                            fontsize=9, fontweight="bold")
+            colorbar = fig.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
+            colorbar.ax.tick_params(colors="#9ba9c3", labelsize=8)
+            colorbar.outline.set_visible(False)
+            fig.tight_layout()
+            st.pyplot(fig, use_container_width=True)
+            plt.close(fig)
 
-    with col2:
-        st.markdown("### Confusion matrix")
-        fig, ax = plt.subplots(figsize=(7, 5))
-        ax.imshow(cm)
-        ax.set_xticks(range(len(labels)))
-        ax.set_yticks(range(len(labels)))
-        ax.set_xticklabels(labels, rotation=45, ha="right")
-        ax.set_yticklabels(labels)
-        ax.set_xlabel("Predicted")
-        ax.set_ylabel("Actual")
-        ax.set_title("Confusion Matrix")
-        for i in range(len(labels)):
-            for j in range(len(labels)):
-                ax.text(j, i, cm[i, j], ha="center", va="center")
-        fig.tight_layout()
-        st.pyplot(fig)
-
-    st.markdown("### Dataset preview")
-    st.dataframe(data[["text", "emotions", "cleaned_text"]].head(20), use_container_width=True)
+    with st.container(border=True):
+        st.markdown("### Dataset preview")
+        st.caption("A small sample of the text and its cleaned version.")
+        st.dataframe(data[["text", "emotions", "cleaned_text"]].head(20), use_container_width=True, hide_index=True)
 
 with tab3:
-    st.subheader("How the application works")
+    st.markdown('<div class="section-eyebrow">03 / Under the hood</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-description">A quick tour of the text-processing and machine-learning pipeline behind every prediction.</div>', unsafe_allow_html=True)
 
     st.markdown(
         """
-        **Pipeline**
-
-        `train.txt` → lowercase → remove punctuation → remove numbers →
-        remove non-ASCII characters → remove English stopwords →
-        train/test split → TF-IDF → Logistic Regression → prediction
-
-        **Model used**
-
-        - TF-IDF Vectorizer
-        - Logistic Regression
-        - `max_iter=1000`
-        - 80/20 train-test split
-        - `random_state=42`
-        """
+        <div class="pipeline">
+          <div class="pipeline-step"><span class="step-number">01</span><strong>Raw text</strong><small>Input sentence</small></div>
+          <div class="pipeline-step"><span class="step-number">02</span><strong>Preprocess</strong><small>Clean + tokenize</small></div>
+          <div class="pipeline-step"><span class="step-number">03</span><strong>TF-IDF</strong><small>Text to features</small></div>
+          <div class="pipeline-step"><span class="step-number">04</span><strong>Classifier</strong><small>Logistic Regression</small></div>
+          <div class="pipeline-step"><span class="step-number">05</span><strong>Prediction</strong><small>Emotion + probabilities</small></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    st.metric("Notebook Logistic Regression accuracy", f"{accuracy * 100:.2f}%")
+    details_col, score_col = st.columns([1.25, 0.75], gap="large")
+    with details_col:
+        with st.container(border=True):
+            st.markdown("### Preprocessing and training")
+            st.markdown(
+                "- Convert text to lowercase\n"
+                "- Remove punctuation and digits\n"
+                "- Remove non-ASCII characters\n"
+                "- Remove English stopwords\n"
+                "- Split examples into train and test sets (80/20)\n"
+                "- Fit TF-IDF on the training text only\n"
+                "- Train Logistic Regression with max_iter=1000"
+            )
+    with score_col:
+        with st.container(border=True):
+            st.markdown("### Current evaluation")
+            st.metric("Held-out test accuracy", f"{accuracy * 100:.2f}%")
+            st.metric("Unique text features", f"{len(vectorizer.vocabulary_):,}")
+            st.metric("Labels supported", f"{len(labels)}")
 
-    report_df = pd.DataFrame(report).T
-    st.markdown("### Classification report")
-    st.dataframe(report_df.round(3), use_container_width=True)
+    with st.container(border=True):
+        st.markdown("### Classification report")
+        st.caption("Precision, recall and F1-score for each emotion label on the test split.")
+        report_df = pd.DataFrame(report).T
+        st.dataframe(report_df.round(3), use_container_width=True)
 
     st.markdown("### Emotion labels")
     st.write(", ".join(labels))
 
 st.divider()
-st.caption(f"Dataset: {source_name} • Text Emotion Classification • Streamlit")
+st.caption(f"Dataset: {source_name} · Text Emotion Classifier · TF-IDF + Logistic Regression")
