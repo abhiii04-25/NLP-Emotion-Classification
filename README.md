@@ -1,36 +1,59 @@
-# 💭 Sentiment & Emotion Analyzer — Streamlit
+# 🧠 Text Emotion Classifier
 
-A complete Streamlit NLP application based on the uploaded `NLP_Project.ipynb`.
+An interactive NLP app that predicts the emotion expressed in a sentence using **TF-IDF + Logistic Regression**. Explore predictions, emotion probabilities, dataset statistics, and model evaluation in a Streamlit dashboard.
 
-## What the notebook uses
+## 🚀 Try the live app
 
-The original notebook:
-- reads `train.txt` using `sep=";"` with columns `text` and `emotions`
-- converts text to lowercase
-- removes punctuation
-- removes numbers
-- removes non-ASCII characters
-- removes English stopwords
-- uses an 80/20 train-test split with `random_state=42`
-- compares Bag-of-Words/Naive Bayes and TF-IDF/Naive Bayes
-- finishes with TF-IDF + `LogisticRegression(max_iter=1000)`
+### 👉 **[Open Text Emotion Classifier](https://abhi-nlp-emotion-classification.streamlit.app/)**
 
-The notebook's final Logistic Regression result is approximately **86.28% accuracy** on its test split. The Streamlit app retrains that final model from the dataset when it starts, so the displayed score is calculated from the dataset currently loaded.
+No installation is needed to try the hosted app. Enter a sentence in the Predict tab, or explore the Dashboard and Model Details tabs.
 
-## Project structure
+[![Open Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Open_App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abhi-nlp-emotion-classification.streamlit.app/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Built_with-Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)](https://streamlit.io/)
+
+## ✨ Features
+
+- **Emotion prediction:** Enter a sentence and view the predicted emotion and model confidence.
+- **Probability chart:** Compare the model's estimated probabilities across emotion classes.
+- **Interactive dashboard:** Explore dataset size, emotion classes, vocabulary size, test accuracy, and emotion distribution.
+- **Model evaluation:** Inspect a confusion matrix and classification report.
+- **Text preprocessing:** Lowercase text and remove punctuation, numbers, non-ASCII characters, and English stopwords.
+- **Dataset upload:** Upload a compatible text or CSV file from the sidebar.
+
+## 🧪 Machine-learning pipeline
 
 ```text
-sentiment_streamlit_app/
-│
-├── app.py
-├── requirements.txt
-├── README.md
-└── train.txt          # put your dataset here
+Input text
+   ↓
+Text cleaning and stopword removal
+   ↓
+TF-IDF feature extraction
+   ↓
+Logistic Regression classifier
+   ↓
+Predicted emotion + class probabilities
 ```
 
-## Dataset format
+The current app trains a TF-IDF vectorizer and `LogisticRegression(max_iter=1000)` on startup using an 80/20 train-test split with `random_state=42`. The evaluation metrics are calculated from that split. The notebook's original final model reported approximately **86.28% accuracy**; your deployed app displays the metric calculated from the dataset loaded at runtime.
 
-Your `train.txt` should look like:
+> **Important:** This is an emotion-classification model, not a separate positive/negative/neutral sentiment model. Emotion predictions are estimates and may be wrong for ambiguous, sarcastic, or context-dependent text.
+
+## 📁 Repository contents
+
+```text
+NLP-Emotion-Classification/
+├── app.py             # Streamlit interface and ML pipeline
+├── train.txt          # Emotion-labelled text dataset
+├── requirements.txt   # Python dependencies
+├── .streamlit/
+│   └── config.toml    # App theme
+└── README.md
+```
+
+The dataset uses semicolon-separated examples, with the text in the first column and the emotion label in the second. No header row is required.
+
+Example:
 
 ```text
 i didnt feel humiliated;sadness
@@ -38,109 +61,45 @@ i feel happy today;joy
 i am very angry;anger
 ```
 
-The application expects exactly two logical columns:
+## 💻 Run locally
 
-```text
-text;emotions
-```
-
-No header is required because the app assigns the column names automatically.
-
-## 🚀 Deploy online (free)
-
-This project is a **Streamlit app**, so deploy it with [Streamlit Community Cloud](https://share.streamlit.io/) rather than GitHub Pages. Community Cloud runs the Python file and installs packages from `requirements.txt`.
-
-### Deploy it from this repository
-
-1. Open [share.streamlit.io](https://share.streamlit.io/) and sign in with **GitHub**.
-2. Authorize Streamlit to access your GitHub repositories if asked.
-3. Click **Create app**. Choose **Yup, I have an app** if prompted.
-4. Set:
-   - **Repository:** `abhiii04-25/NLP-Emotion-Classification`
-   - **Branch:** `main`
-   - **Main file path:** `app.py`
-5. Optionally choose a memorable app subdomain, such as `abhi-nlp-emotion-classification` if available.
-6. Click **Deploy** and watch the app logs until it finishes starting.
-
-The repository already includes `app.py`, `requirements.txt`, and `train.txt`. The app trains the TF-IDF + Logistic Regression model when it starts, so the first launch can take longer than later interactions. No API key or secrets are required.
-
-After deployment, Streamlit will display your actual shareable `*.streamlit.app` URL. The final URL depends on the subdomain you choose.
-
-### Run locally
-
-## Run in VS Code
-
-### 1. Create a virtual environment
+Requires Python and pip.
 
 ```powershell
+# Clone the repository
+git clone https://github.com/abhiii04-25/NLP-Emotion-Classification.git
+cd NLP-Emotion-Classification
+
+# Create and activate a virtual environment (Windows PowerShell)
 python -m venv .venv
-```
-
-### 2. Activate it
-
-```powershell
 .\.venv\Scripts\Activate.ps1
-```
 
-If PowerShell blocks activation, you can run:
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
-
-### 3. Install packages
-
-```powershell
+# Install the dependencies
 python -m pip install -r requirements.txt
-```
 
-### 4. Put `train.txt` beside `app.py`
-
-```text
-sentiment_streamlit_app/
-├── app.py
-├── requirements.txt
-└── train.txt
-```
-
-### 5. Start Streamlit
-
-```powershell
+# Launch the app
 python -m streamlit run app.py
 ```
 
-This `python -m streamlit` command is useful when Windows says:
+Then open the local URL Streamlit prints in the terminal, usually `http://localhost:8501`.
 
-`streamlit is not recognized as the name of a cmdlet...`
+## 🌐 Deployment
 
-## Features
+This project is hosted on **Streamlit Community Cloud**. The application entry point is `app.py`, the branch is `main`, and dependencies are listed in `requirements.txt`.
 
-### 🔮 Predict
-Enter a sentence and get:
-- predicted emotion
-- confidence
-- cleaned text
-- probability chart for all classes
+**Live link:** [https://abhi-nlp-emotion-classification.streamlit.app/](https://abhi-nlp-emotion-classification.streamlit.app/)
 
-### 📊 Dashboard
-Shows:
-- number of dataset rows
-- number of emotion classes
-- TF-IDF vocabulary size
-- test accuracy
-- emotion distribution
-- confusion matrix
-- dataset preview
+## 🛠️ Tech stack
 
-### 🧠 Model Details
-Shows:
-- preprocessing pipeline
-- model configuration
-- classification report
-- emotion labels
+- Python
+- Pandas and NumPy
+- NLTK text preprocessing
+- Scikit-learn (TF-IDF, Logistic Regression, model metrics)
+- Matplotlib
+- Streamlit
 
-## Important terminology
+---
 
-Your dataset contains an `emotions` column, so technically this project is **emotion classification** rather than binary positive/negative sentiment analysis. A good GitHub project title is:
-
-**NLP Sentiment & Emotion Analyzer using TF-IDF and Logistic Regression**
+**Project:** Text Emotion Classifier  
+**Source code:** [GitHub repository](https://github.com/abhiii04-25/NLP-Emotion-Classification)  
+**Live demo:** [Try the app](https://abhi-nlp-emotion-classification.streamlit.app/)
