@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from nltk.corpus import stopwords
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, ENGLISH_STOP_WORDS
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
@@ -21,12 +21,23 @@ st.set_page_config(
 # ---------- NLP resources ----------
 @st.cache_resource
 def load_stopwords():
+    """Load NLTK stopwords, with an offline-safe fallback for hosted apps."""
     try:
-        words = stopwords.words("english")
+        return set(stopwords.words("english"))
     except LookupError:
-        nltk.download("stopwords", quiet=True)
-        words = stopwords.words("english")
-    return set(words)
+        # Community hosting environments may not have the NLTK corpus cached yet.
+        # Try to fetch it, but keep the app usable if the download is unavailable.
+        try:
+            if nltk.download("stopwords", quiet=True):
+                return set(stopwords.words("english"))
+        except Exception:
+            pass
+
+        st.warning(
+            "NLTK stopwords could not be downloaded; using scikit-learn's "
+            "built-in English stopword list instead."
+        )
+        return set(ENGLISH_STOP_WORDS)
 
 stop_words = load_stopwords()
 
@@ -119,7 +130,7 @@ with st.sidebar:
     )
 
 # Dataset loading
-default_path = Path("train.txt")
+default_path = Path(__file__).resolve().parent / "train.txt"
 
 try:
     if uploaded is not None:
