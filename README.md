@@ -46,6 +46,28 @@ text;emotions
 
 No header is required because the app assigns the column names automatically.
 
+## 🚀 Deploy online (free)
+
+This project is a **Streamlit app**, so deploy it with [Streamlit Community Cloud](https://share.streamlit.io/) rather than GitHub Pages. Community Cloud runs the Python file and installs packages from `requirements.txt`.
+
+### Deploy it from this repository
+
+1. Open [share.streamlit.io](https://share.streamlit.io/) and sign in with **GitHub**.
+2. Authorize Streamlit to access your GitHub repositories if asked.
+3. Click **Create app**. Choose **Yup, I have an app** if prompted.
+4. Set:
+   - **Repository:** `abhiii04-25/NLP-Emotion-Classification`
+   - **Branch:** `main`
+   - **Main file path:** `app.py`
+5. Optionally choose a memorable app subdomain, such as `abhi-nlp-emotion-classification` if available.
+6. Click **Deploy** and watch the app logs until it finishes starting.
+
+The repository already includes `app.py`, `requirements.txt`, and `train.txt`. The app trains the TF-IDF + Logistic Regression model when it starts, so the first launch can take longer than later interactions. No API key or secrets are required.
+
+After deployment, Streamlit will display your actual shareable `*.streamlit.app` URL. The final URL depends on the subdomain you choose.
+
+### Run locally
+
 ## Run in VS Code
 
 ### 1. Create a virtual environment
